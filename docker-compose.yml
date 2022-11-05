@@ -36,6 +36,14 @@ services:
       - ./:/workdir:ro
     restart: unless-stopped
 
+  lovemanifest:
+    image: vahpetr/lovemanifest:1.0.0
+    environment:
+      NGINX_PORT: "${LOVEMANIFEST_PORT}"
+    ports:
+      - "${LOVEMANIFEST_PORT}"
+    restart: unless-stopped
+
 volumes:
   nginx_conf:
     external: true
