@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   lovemanifest:
-    image: vahpetr/lovemanifest:1.0.0
+    image: vahpetr/lovemanifest:1.0.1
     environment:
       NGINX_PORT: "${LOVEMANIFEST_PORT}"
     ports:
