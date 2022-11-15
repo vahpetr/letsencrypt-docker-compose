@@ -1,5 +1,5 @@
 server {
-    listen [::]:80 ipv6only=on;
+    listen [::]:80;
     listen 80;
     server_name ${domain} www.${domain};
 
@@ -16,8 +16,8 @@ server {
 }
 
 server {
-    listen [::]:443 ssl http2 ipv6only=on default_server;
-    listen 443 ssl http2 default_server;
+    listen [::]:443 ssl http2;
+    listen 443 ssl http2;
     server_name ${domain} www.${domain};
 
     server_name _;
