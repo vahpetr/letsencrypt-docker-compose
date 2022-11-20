@@ -159,6 +159,7 @@ services:
 ```bash
 docker volume create --name=nginx_conf
 docker volume create --name=letsencrypt_certs
+docker volume create --name=minio_data
 ```
 
 ### <a id="4952d0670f6fb00a0337d2251621508a"></a>Step 4 - Build images and start containers using staging Let's Encrypt server
