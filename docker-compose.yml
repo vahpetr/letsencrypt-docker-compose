@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
 
   lovemanifest:
-    image: vahpetr/lovemanifest:1.0.2211201711
+    image: vahpetr/lovemanifest:1.0.2211280030
     environment:
       - NGINX_PORT=5000
     ports:
@@ -96,6 +96,10 @@ services:
       - IMGPROXY_ENABLE_CLIENT_HINTS=true
       - IMGPROXY_ENABLE_WEBP_DETECTION=true
       - IMGPROXY_ALLOW_ORIGIN=*
+      - IMGPROXY_TTL=60
+      - IMGPROXY_ENABLE_DEBUG_HEADERS=false
+      - IMGPROXY_WATERMARK_URL=http://minio:9000/lovemanifest/media/watermark.svg
+      - IMGPROXY_BASE_URL=http://minio:9000
       # - IMGPROXY_S3_REGION=${S3_REGION}
     ports:
       - 8080:8080
