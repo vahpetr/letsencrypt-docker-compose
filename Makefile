@@ -33,5 +33,10 @@ nginx_test:
 nginx_reload:
 	@docker compose exec --no-TTY nginx nginx -s reload
 
+nginx_restart:
+	@docker compose up --pull --force-recreate --no-deps nginx -d
+	@docker image prune -f
+	@make nginx_reload
+
 nginx_enter:
 	@docker compose exec -ti nginx sh
