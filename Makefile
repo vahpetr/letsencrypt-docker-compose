@@ -32,3 +32,6 @@ nginx_test:
 
 nginx_reload:
 	@docker compose exec --no-TTY nginx nginx -s reload
+
+nginx_enter:
+	@docker compose exec -ti nginx sh

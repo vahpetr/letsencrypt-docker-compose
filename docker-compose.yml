@@ -11,7 +11,7 @@ services:
       - ./config.env
     volumes:
       - nginx_conf:/etc/nginx/sites
-      # - nginx_cache:/data/nginx/cache
+      - nginx_cache:/data/nginx/cache
       - letsencrypt_certs:/etc/letsencrypt
       - certbot_acme_challenge:/var/www/certbot
       - ./vhosts:/etc/nginx/vhosts
@@ -53,8 +53,8 @@ services:
 
   minio:
     image: minio/minio:RELEASE.2022-11-11T03-44-20Z
-    mem_limit: 256m
-    mem_reservation: 128m
+    mem_limit: 512m
+    mem_reservation: 256m
     cpus: 1
     command: server /data --console-address ":9001"
     volumes:
@@ -78,12 +78,12 @@ services:
 
   imgcdn-staging:
     image: darthsim/imgproxy:v3.10.0
-    mem_limit: 512m
-    mem_reservation: 128m
+    mem_limit: 256m
+    mem_reservation: 64m
     cpus: 1
     environment:
-      # - IMGPROXY_KEY=${IMGPROXY_KEY}
-      # - IMGPROXY_SALT=${IMGPROXY_SALT}
+      - IMGPROXY_KEY=${IMGPROXY_KEY}
+      - IMGPROXY_SALT=${IMGPROXY_SALT}
       - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
       - AWS_SECRET_KEY=${MINIO_ROOT_PASSWORD}
       - IMGPROXY_USE_S3=true
@@ -94,7 +94,7 @@ services:
       - IMGPROXY_JPEG_OPTIMIZE_SCANS=true
       - IMGPROXY_PNG_INTERLACED=true
       - IMGPROXY_ENABLE_CLIENT_HINTS=true
-      # - IMGPROXY_ENABLE_WEBP_DETECTION=true
+      - IMGPROXY_ENABLE_WEBP_DETECTION=true
       - IMGPROXY_ALLOW_ORIGIN=https://lovemanifest.balkon.dev
       - IMGPROXY_TTL=60
       - IMGPROXY_ENABLE_DEBUG_HEADERS=true
@@ -130,8 +130,8 @@ services:
     mem_reservation: 128m
     cpus: 1
     environment:
-      # - IMGPROXY_KEY=${IMGPROXY_KEY}
-      # - IMGPROXY_SALT=${IMGPROXY_SALT}
+      - IMGPROXY_KEY=${IMGPROXY_KEY}
+      - IMGPROXY_SALT=${IMGPROXY_SALT}
       - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
       - AWS_SECRET_KEY=${MINIO_ROOT_PASSWORD}
       - IMGPROXY_USE_S3=true
@@ -173,7 +173,7 @@ services:
       - minio
 
   lovemanifest-staging:
-    image: vahpetr/lovemanifest:1.0.2212041634-staging
+    image: vahpetr/lovemanifest:1.0.2212042330-staging
     mem_limit: 32m
     mem_reservation: 6m
     cpus: 1
@@ -192,7 +192,7 @@ services:
       - imgcdn-staging
 
   lovemanifest:
-    image: vahpetr/lovemanifest:1.0.2212041634
+    image: vahpetr/lovemanifest:1.0.2212042330
     mem_limit: 64m
     mem_reservation: 6m
     cpus: 1
@@ -213,8 +213,8 @@ services:
 volumes:
   nginx_conf:
     external: true
-  # nginx_cache:
-  #   external: true
+  nginx_cache:
+    external: true
   letsencrypt_certs:
     external: true
   certbot_acme_challenge:

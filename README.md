@@ -158,7 +158,7 @@ services:
 
 ```bash
 docker volume create --name=nginx_conf
-# docker volume create --name=nginx_cache
+docker volume create --name=nginx_cache
 docker volume create --name=letsencrypt_certs
 docker volume create --name=minio_data
 ```
