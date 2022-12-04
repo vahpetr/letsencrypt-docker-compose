@@ -173,7 +173,7 @@ services:
       - minio
 
   lovemanifest-staging:
-    image: vahpetr/lovemanifest:1.0.2212042330-staging
+    image: vahpetr/lovemanifest:1.0.2212050120-staging
     mem_limit: 32m
     mem_reservation: 6m
     cpus: 1
@@ -192,7 +192,7 @@ services:
       - imgcdn-staging
 
   lovemanifest:
-    image: vahpetr/lovemanifest:1.0.2212042330
+    image: vahpetr/lovemanifest:1.0.2212050120
     mem_limit: 64m
     mem_reservation: 6m
     cpus: 1
