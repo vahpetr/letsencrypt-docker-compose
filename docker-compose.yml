@@ -1,62 +1,61 @@
-version: "2"
+version: "3"
 
 services:
   nginx:
     build: ./nginx
     image: evgeniy-khyst/nginx
+    mem_limit: 128m
+    mem_reservation: 32m
+    cpus: 1
     env_file:
       - ./config.env
     volumes:
       - nginx_conf:/etc/nginx/sites
+      # - nginx_cache:/data/nginx/cache
       - letsencrypt_certs:/etc/letsencrypt
       - certbot_acme_challenge:/var/www/certbot
       - ./vhosts:/etc/nginx/vhosts
       - ./html:/var/www/html
     ports:
-      - "80:80"
-      - "443:443"
+      - 80:80
+      - 443:443/tcp
+      - 443:443/udp
     restart: unless-stopped
 
   certbot:
     build: ./certbot
     image: evgeniy-khyst/certbot
+    mem_limit: 128m
+    mem_reservation: 32m
+    cpus: 1
     env_file:
       - ./config.env
     volumes:
       - letsencrypt_certs:/etc/letsencrypt
       - certbot_acme_challenge:/var/www/certbot
+    depends_on:
+      - nginx
 
   cron:
     build: ./cron
     image: evgeniy-khyst/cron
+    mem_limit: 32m
+    mem_reservation: 6m
+    cpus: 1
     environment:
       - COMPOSE_PROJECT_NAME=balkon
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ./:/workdir:ro
     restart: unless-stopped
-
-  lovemanifest:
-    image: vahpetr/lovemanifest:1.0.2211280030
-    environment:
-      - NGINX_PORT=5000
-    ports:
-      - 5000:5000
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-f",
-          "http://localhost:5000/internal/health"
-        ]
-      interval: 30s
-      timeout: 20s
-      retries: 3
-    restart: unless-stopped
+    depends_on:
+      - nginx
 
   minio:
     image: minio/minio:RELEASE.2022-11-11T03-44-20Z
+    mem_limit: 256m
+    mem_reservation: 128m
+    cpus: 1
     command: server /data --console-address ":9001"
     volumes:
       - minio_data:/data
@@ -69,23 +68,22 @@ services:
       - MINIO_DEFAULT_BUCKET=balkon
       # - MINIO_SITE_REGION=${S3_REGION}
     healthcheck:
-      test:
-        [
-          "CMD",
-          "curl",
-          "-f",
-          "http://localhost:9000/minio/health/live"
-        ]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 30s
       timeout: 20s
       retries: 3
     restart: unless-stopped
+    depends_on:
+      - nginx
 
-  imgcdn:
+  imgcdn-staging:
     image: darthsim/imgproxy:v3.10.0
+    mem_limit: 512m
+    mem_reservation: 128m
+    cpus: 1
     environment:
-      - IMGPROXY_KEY=${IMGPROXY_KEY}
-      - IMGPROXY_SALT=${IMGPROXY_SALT}
+      # - IMGPROXY_KEY=${IMGPROXY_KEY}
+      # - IMGPROXY_SALT=${IMGPROXY_SALT}
       - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
       - AWS_SECRET_KEY=${MINIO_ROOT_PASSWORD}
       - IMGPROXY_USE_S3=true
@@ -93,21 +91,130 @@ services:
       - IMGPROXY_SERVER_NAME=imgcdn.balkon.dev
       - IMGPROXY_USE_ETAG=true
       - IMGPROXY_JPEG_PROGRESSIVE=true
+      - IMGPROXY_JPEG_OPTIMIZE_SCANS=true
+      - IMGPROXY_PNG_INTERLACED=true
       - IMGPROXY_ENABLE_CLIENT_HINTS=true
-      - IMGPROXY_ENABLE_WEBP_DETECTION=true
-      - IMGPROXY_ALLOW_ORIGIN=*
+      # - IMGPROXY_ENABLE_WEBP_DETECTION=true
+      - IMGPROXY_ALLOW_ORIGIN=https://lovemanifest.balkon.dev
       - IMGPROXY_TTL=60
-      - IMGPROXY_ENABLE_DEBUG_HEADERS=false
+      - IMGPROXY_ENABLE_DEBUG_HEADERS=true
       - IMGPROXY_WATERMARK_URL=http://minio:9000/lovemanifest/media/watermark.svg
       - IMGPROXY_BASE_URL=http://minio:9000
       # - IMGPROXY_S3_REGION=${S3_REGION}
+      - IMGPROXY_FORMAT_QUALITY=jpeg=80,webp=82,avif=65
+      - IMGPROXY_STRIP_METADATA=true
+      - IMGPROXY_STRIP_COLOR_PROFILE=true
+      - IMGPROXY_PNG_QUANTIZATION_COLORS=128
+      - IMGPROXY_PNG_QUANTIZE=false
+      - IMGPROXY_MAX_ANIMATION_FRAMES=64
+      - IMGPROXY_AVIF_SPEED=8
+      - IMGPROXY_ENABLE_AVIF_DETECTION=true
+      - IMGPROXY_CONCURRENCY=1
+      - IMGPROXY_MAX_CLIENTS=20
+      - IMGPROXY_REQUESTS_QUEUE_SIZE=40
+    ports:
+      - 9080:8080
+    healthcheck:
+      test: ["CMD", "imgproxy", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    depends_on:
+      - nginx
+      - minio
+
+  imgcdn:
+    image: darthsim/imgproxy:v3.10.0
+    mem_limit: 512m
+    mem_reservation: 128m
+    cpus: 1
+    environment:
+      # - IMGPROXY_KEY=${IMGPROXY_KEY}
+      # - IMGPROXY_SALT=${IMGPROXY_SALT}
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_KEY=${MINIO_ROOT_PASSWORD}
+      - IMGPROXY_USE_S3=true
+      - IMGPROXY_S3_ENDPOINT=http://minio:9000
+      - IMGPROXY_SERVER_NAME=imgcdn.lovemanifest.art
+      - IMGPROXY_USE_ETAG=true
+      - IMGPROXY_JPEG_PROGRESSIVE=true
+      - IMGPROXY_JPEG_OPTIMIZE_SCANS=true
+      - IMGPROXY_PNG_INTERLACED=true
+      - IMGPROXY_ENABLE_CLIENT_HINTS=true
+      - IMGPROXY_ENABLE_WEBP_DETECTION=true
+      - IMGPROXY_ALLOW_ORIGIN=https://lovemanifest.art
+      - IMGPROXY_TTL=60
+      - IMGPROXY_ENABLE_DEBUG_HEADERS=true
+      - IMGPROXY_WATERMARK_URL=http://minio:9000/lovemanifest/media/watermark.svg
+      - IMGPROXY_BASE_URL=http://minio:9000
+      # - IMGPROXY_S3_REGION=${S3_REGION}
+      - IMGPROXY_FORMAT_QUALITY=jpeg=80,webp=82,avif=65
+      - IMGPROXY_STRIP_METADATA=true
+      - IMGPROXY_STRIP_COLOR_PROFILE=true
+      - IMGPROXY_PNG_QUANTIZATION_COLORS=128
+      - IMGPROXY_PNG_QUANTIZE=false
+      - IMGPROXY_MAX_ANIMATION_FRAMES=64
+      - IMGPROXY_AVIF_SPEED=8
+      - IMGPROXY_ENABLE_AVIF_DETECTION=true
+      - IMGPROXY_CONCURRENCY=1
+      - IMGPROXY_MAX_CLIENTS=20
+      - IMGPROXY_REQUESTS_QUEUE_SIZE=40
     ports:
       - 8080:8080
+    healthcheck:
+      test: ["CMD", "imgproxy", "health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
     restart: unless-stopped
+    depends_on:
+      - nginx
+      - minio
+
+  lovemanifest-staging:
+    image: vahpetr/lovemanifest:1.0.2212041634-staging
+    mem_limit: 32m
+    mem_reservation: 6m
+    cpus: 1
+    environment:
+      - NGINX_PORT=6000
+    ports:
+      - 6000:6000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:6000/internal/health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    depends_on:
+      - nginx
+      - imgcdn-staging
+
+  lovemanifest:
+    image: vahpetr/lovemanifest:1.0.2212041634
+    mem_limit: 64m
+    mem_reservation: 6m
+    cpus: 1
+    environment:
+      - NGINX_PORT=5000
+    ports:
+      - 5000:5000
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/internal/health"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: unless-stopped
+    depends_on:
+      - nginx
+      - imgcdn
 
 volumes:
   nginx_conf:
     external: true
+  # nginx_cache:
+  #   external: true
   letsencrypt_certs:
     external: true
   certbot_acme_challenge:
