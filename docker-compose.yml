@@ -109,7 +109,7 @@ services:
       - IMGPROXY_MAX_ANIMATION_FRAMES=64
       - IMGPROXY_AVIF_SPEED=8
       - IMGPROXY_ENABLE_AVIF_DETECTION=true
-      - IMGPROXY_CONCURRENCY=1
+      - IMGPROXY_CONCURRENCY=2
       - IMGPROXY_MAX_CLIENTS=20
       - IMGPROXY_REQUESTS_QUEUE_SIZE=40
     ports:
@@ -157,7 +157,7 @@ services:
       - IMGPROXY_MAX_ANIMATION_FRAMES=64
       - IMGPROXY_AVIF_SPEED=8
       - IMGPROXY_ENABLE_AVIF_DETECTION=true
-      - IMGPROXY_CONCURRENCY=1
+      - IMGPROXY_CONCURRENCY=2
       - IMGPROXY_MAX_CLIENTS=20
       - IMGPROXY_REQUESTS_QUEUE_SIZE=40
     ports:
@@ -173,7 +173,7 @@ services:
       - minio
 
   lovemanifest-staging:
-    image: vahpetr/lovemanifest:1.0.2212050120-staging
+    image: vahpetr/lovemanifest:1.0.2212172033-staging
     mem_limit: 32m
     mem_reservation: 6m
     cpus: 1
@@ -192,7 +192,7 @@ services:
       - imgcdn-staging
 
   lovemanifest:
-    image: vahpetr/lovemanifest:1.0.2212050120
+    image: vahpetr/lovemanifest:1.0.2212172033
     mem_limit: 64m
     mem_reservation: 6m
     cpus: 1
